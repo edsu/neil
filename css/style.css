@@ -1,0 +1,21 @@
+.links line {
+  stroke: #999;
+  stroke-opacity: 0.8;
+  stroke-width: 2px;
+}
+
+.links line {
+  color: green;
+  stroke-width: 0.5px;
+}
+
+.nodes circle {
+  stroke: gray;
+  fill: white;
+  stroke-width: 1.5px;
+}
+
+#graph {
+  width: 99vw;
+  height: 99vh;
+}
