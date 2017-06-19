@@ -5,6 +5,7 @@
     <title>Neil</title>
     <meta charset="utf-8">
     <script src="js/d3.v4.min.js"></script>
+    <script src="js/d3-scale-chromatic.min.js"></script>
     <script src="js/jquery-3.1.1.min.js"></script>
     <script src="js/people.js"></script>
     <link rel="stylesheet" href="css/style.css">
@@ -16,14 +17,15 @@
 
     <script>
 
-    var width = $(window).width();
-    var height = $(window).height();
+    var width = 800
+    var height = 480
+    var toggle = 0
+
+    var color = d3.schemeAccent
 
     var svg = d3.select("svg")
       .attr("height", height)
       .attr("width", width);
-
-    var color = d3.scaleOrdinal(d3.schemeCategory20c);
 
     var simulation = d3.forceSimulation()
       .velocityDecay(0.4)
@@ -45,12 +47,20 @@
       .enter().append("circle")
       .attr("r", 7)
       .attr("class", function(d) { return d.type; })
+      .attr("id", function(d) { return d.id.replace(/\s/g, "_") })
       .call(d3.drag()
         .on("start", dragstarted)
         .on("drag", dragged)
-        .on("end", dragended));
+        .on("end", dragended))
+        .on('click', connectedNodes);
 
-    node.append("title")
+    var text = svg.append("g").attr("class", "labels").selectAll("g")
+      .data(people.nodes)
+      .enter().append("g").attr("class", "labels");
+
+    text.append("text")
+      .attr("x", 14)
+      .attr("y", ".31em")
       .text(function(d) { return d.id; });
 
     simulation
@@ -70,6 +80,10 @@
       node
         .attr("cx", function(d) { return d.x; })
         .attr("cy", function(d) { return d.y; });
+
+      text
+       .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; })
+       .attr("id", function(d) { return "t_"+d.id.replace(/\s/g, "_")})
     }
 
     function dragstarted(d) {
@@ -88,6 +102,44 @@
       d.fx = null;
       d.fy = null;
     }
+
+    var linkedByIndex = {};
+    for (i = 0; i < people.nodes.length; i++) {
+        linkedByIndex[i + "," + i] = 1;
+    };
+    people.links.forEach(function (d) {
+        linkedByIndex[d.source.index + "," + d.target.index] = 1;
+    });
+
+
+
+    function neighboring(a, b) {
+        return linkedByIndex[a.index + "," + b.index];
+    }
+
+    function connectedNodes() {
+        var colorIdx = Math.floor(Math.random() * (8 - 1 + 1));
+        d = d3.select(this).node().__data__;
+        node.style("fill", function(o){return isNeighbor(o, colorIdx)});
+    }
+
+    function isNeighbor(o, c) {
+        var highlight = "white"
+        if (neighboring(d, o) | neighboring(o, d)) {
+          highlight = color[c]
+          // make sure text is visible
+          d3.select(document.getElementById("t_"+o.id.replace(/\s/g, "_"))).style("display", "inline")
+        }
+        else {
+          // hide text
+          d3.select(document.getElementById("t_"+o.id.replace(/\s/g, "_"))).style("display", "none")
+        }
+        return highlight
+    }
+
+    // Start with Neil selected
+    d = d3.select(document.getElementById("Neil_Fraistat")).node().__data__;
+    node.style("fill", function(o){return isNeighbor(o, 4)});
 
     </script>
 
