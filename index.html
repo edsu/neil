@@ -23,6 +23,15 @@
 
     var color = d3.schemeAccent
 
+    function getNodeSize(id){
+      var size = people.links.reduce(function(acc, link){
+        acc = link.source == id ? acc+1 : acc
+        return acc
+      }, 0)
+      // Convert range 1-100 to 5-20
+      return (size-1)*15/99+5
+    }
+
     var svg = d3.select("svg")
       .attr("height", height)
       .attr("width", width);
@@ -45,14 +54,14 @@
       .selectAll("circle")
       .data(people.nodes)
       .enter().append("circle")
-      .attr("r", 7)
+      .attr("r", function(d) { return getNodeSize(d.id) })
       .attr("class", function(d) { return d.type; })
       .attr("id", function(d) { return d.id.replace(/\s/g, "_") })
       .call(d3.drag()
         .on("start", dragstarted)
         .on("drag", dragged)
         .on("end", dragended))
-        .on('click', connectedNodes);
+      .on('click', connectedNodes);
 
     var text = svg.append("g").attr("class", "labels").selectAll("g")
       .data(people.nodes)
@@ -110,8 +119,6 @@
     people.links.forEach(function (d) {
         linkedByIndex[d.source.index + "," + d.target.index] = 1;
     });
-
-
 
     function neighboring(a, b) {
         return linkedByIndex[a.index + "," + b.index];
